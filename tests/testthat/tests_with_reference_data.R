@@ -21,8 +21,8 @@ test_that("Gene weight on reference dataset works", {
     sample_scores <- res[[2]]
 
     data("gene_weights_reference")
-    expect_equal(gene_weights_test[,1], gene_weights_reference[,1])
-    expect_equal(gene_weights_test[,2], gene_weights_reference[,2])
+    expect_equal(unlist(gene_weights_test[,1]), unlist(gene_weights_reference[,1]))
+    expect_equal(gene_weights_test[,2], as.character(gene_weights_reference[,2]))
     expect_equal(row.names(gene_weights_test), row.names(gene_weights_reference))
 })
 
