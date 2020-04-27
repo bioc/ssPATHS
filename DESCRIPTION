@@ -1,7 +1,7 @@
 Package: ssPATHS
 Type: Package
 Title: ssPATHS: Single Sample PATHway Score
-Version: 1.1.2
+Version: 1.2.0
 Author: Natalie R. Davidson
 Maintainer: Natalie R. Davidson <natalie.davidson@inf.ethz.ch>
 Description: This package generates pathway scores from expression data for
