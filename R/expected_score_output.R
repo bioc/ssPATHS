@@ -3,7 +3,7 @@
 #' @docType data
 #' @usage data(expected_score_output)
 #'
-#' @source Derived data
+#' @source Derived Data
 #' @format A data frame with columns:
 #' \describe{
 #'  \item{sample_id}{String. The name of the sample. Samples with "hyp"

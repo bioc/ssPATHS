@@ -85,7 +85,7 @@ sample_scores = res[[2]]
 
 # Now, using the gene weightings learned from the reference set, we can apply
 # it to a new sample.
-load("../ssPATHS/data/new_samp_df.RData")
+data("new_samp_df")
 new_score_df = get_new_samp_score(gene_weights, new_samp_df)
 new_score_df
 
