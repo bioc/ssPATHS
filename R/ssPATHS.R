@@ -33,7 +33,7 @@ get_hypoxia_genes <- function(){
     return(HIF_GENES)
 }
 
-get_gene_weights <- function(expression_matr){
+get_gene_weights <- function(expression_matr, gene_ids){
 
     if(sum(colnames(expression_matr) %in% c("Y", "sample_id")) != 2){
         stop("Need column names Y and sample_id")
@@ -45,17 +45,22 @@ get_gene_weights <- function(expression_matr){
         stop("Y must have both a 1 and 0 entry")
     }
 
-    gene_ids = setdiff(colnames(expression_matr), c("Y", "sample_id"))
-
-    dca_matr = expression_matr[,gene_ids]
-    chunks = rep(1, nrow(expression_matr))
-    chunks[expression_matr$Y!=0] = 2
-    neglinks = matrix(c(0, 1, 1, 0), 2, 2)
+    total_gene_ids = setdiff(colnames(expression_matr), c("Y", "sample_id"))
 
     # normalize
+    dca_matr = expression_matr[,total_gene_ids]
     dca_data = as.matrix(t(scale(log10(t(dca_matr+1)))))
     dca_data[is.nan(dca_data)] <- 0
     row.names(dca_data) = expression_matr$sample_id
+    genes_interest_idx = which(total_gene_ids %in% gene_ids)
+    gene_ids_final = colnames(dca_data)[genes_interest_idx]
+
+    dca_data = dca_data[,gene_ids_final]
+
+    # set up DCA
+    chunks = rep(1, nrow(expression_matr))
+    chunks[expression_matr$Y!=0] = 2
+    neglinks = matrix(c(0, 1, 1, 0), 2, 2)
 
     # get weights
     dca_res = dml::dca(data=dca_data, chunks=chunks, neglinks=neglinks)
@@ -70,18 +75,19 @@ get_gene_weights <- function(expression_matr){
     # check direction
     lower_score = mean(dca_proj$pathway_score[dca_proj$Y==0])
     upper_score = mean(dca_proj$pathway_score[dca_proj$Y==1])
+    flipped = FALSE
     if(lower_score > upper_score){
         proj_vector = proj_vector * -1
         dca_proj = dca_data %*% proj_vector
         dca_proj = data.frame(pathway_score=dca_proj, sample_id=row.names(dca_proj))
         dca_proj = merge(expression_matr[,c("sample_id", "Y")], dca_proj)
         dca_proj = dca_proj[order(dca_proj$pathway_score),]
-
+        flipped = TRUE
     }
 
-    proj_vector_df = data.frame(gene_weight=proj_vector, gene_ids=gene_ids)
+    proj_vector_df = data.frame(gene_weight=proj_vector, gene_ids=gene_ids_final)
 
-    return(list(proj_vector_df, dca_proj))
+    return(list(proj_vector_df, dca_proj, flipped))
 
 }
 
@@ -113,7 +119,7 @@ get_classification_accuracy <- function(sample_scores, positive_val){
 
 }
 
-get_new_samp_score <- function(gene_weights, expression_matr, run_normalization=T){
+get_new_samp_score <- function(gene_weights, expression_matr, gene_ids, run_normalization=T){
 
     if(sum(colnames(expression_matr) %in% c("sample_id")) != 1){
         stop("Need column name sample_id")
@@ -124,28 +130,30 @@ get_new_samp_score <- function(gene_weights, expression_matr, run_normalization=
     }
     has_Y = "Y" %in% colnames(expression_matr)
 
-    gene_ids = setdiff(colnames(expression_matr), c("Y", "sample_id"))
+    total_gene_ids = setdiff(colnames(expression_matr), c("Y", "sample_id"))
     gene_ids = intersect(gene_ids, gene_weights$gene_ids)
 
     if(length(gene_ids) != gene_weights$gene_ids){
         warning("Genes missing in gene_weights or expression_matr")
     }
     # normalize
-    dca_matr = expression_matr[,gene_ids]
-    if(run_normalization){
-        dca_data = as.matrix(t(scale(log10(t(dca_matr+1)))))
-    }else{
-        dca_data = as.matrix(t(scale((t(dca_matr+1)))))
-    }
+    # normalize
+    dca_matr = expression_matr[,total_gene_ids]
+    dca_data = as.matrix(t(scale(log10(t(dca_matr+1)))))
     dca_data[is.nan(dca_data)] <- 0
     row.names(dca_data) = expression_matr$sample_id
+
+    # must preserve ordering of proj_vector
+    dca_data = dca_data[,gene_ids]
 
     # format the projection vector
     proj_vector = gene_weights$gene_weight
     names(proj_vector) = gene_weights$gene_ids
     proj_vector = proj_vector[gene_ids]
 
-    if(sum(names(proj_vector) != colnames(dca_matr)) > 0){
+    if(sum(names(proj_vector) != colnames(dca_data)) > 0){
+        print(names(proj_vector))
+        print(colnames(dca_matr))
         stop("Error Matching Gene ids")
     }
 
