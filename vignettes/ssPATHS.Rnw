@@ -33,21 +33,16 @@ meaningfully characterized in order to tailor treatments.
 Using our method, ssPATHS, we are able to estimate pathway
 deviations for a single patient, by first learning a discriminative gene
 weighting from a reference cohort. In this vignette, we use TCGA gene expression
-data to learn a weighting on hypoxia-related genes then apply it to pancreatic
+data to learn a weighting on hypoxia-related genes then apply it to PDAC
 cancer cell lines to estimate the level of hypoxia within each sample.
 
 \section{Formatting Data}
 
 First, we load the appropriate packages we will need.
 <<>>=
-
-library("dml")
-library("data.table")
 library("ROCR")
-library("MESS")
 library("ggplot2")
 library("ssPATHS")
-library("plyr")
 @
 
 Next, we will read in the TCGA data and format it appropriately.
@@ -62,6 +57,16 @@ Let's look at the format of our data. To learn our gene weights we will need a
 <<>>=
 tcga_expr_df[1:6,1:5]
 @
+Now we will need to transform the data.frame into a SummarizedExperiment object.
+
+<<>>=
+tcga_se <- SummarizedExperiment(t(tcga_expr_df[ , -(1:4)]),
+                                colData=tcga_expr_df[ , 2:4])
+colnames(tcga_se) <- tcga_expr_df$tcga_id
+colData(tcga_se)$sample_id <- tcga_expr_df$tcga_id
+
+@
+
 
 Since we are interested in hypoxia, we want to learn a weighting only on genes
 associated with hypoxia. In this package we have a helper function to retreive
@@ -69,9 +74,9 @@ these genes, but other gene sets can be used for different pathways of interest.
 Gene sets can be easily fetched using the package \emph{msigdbr}.
 <<>>=
 
-hypoxia_gene_ids = get_hypoxia_genes()
-hypoxia_gene_ids = intersect(hypoxia_gene_ids, colnames(tcga_expr_df))
-hypoxia_df = tcga_expr_df[,c("tcga_id", "is_normal", hypoxia_gene_ids)]
+hypoxia_gene_ids <- get_hypoxia_genes()
+hypoxia_gene_ids <- intersect(hypoxia_gene_ids, rownames(tcga_se))
+hypoxia_se <- tcga_se[hypoxia_gene_ids,]
 @
 
 
@@ -83,10 +88,8 @@ score indicates a more hypoxic sample.
 
 <<>>=
 
-colnames(hypoxia_df)[1:2] = c("sample_id", "Y")
-hypoxia_df$Y = 0
-hypoxia_df$Y[tcga_expr_df$is_normal==TRUE] = 0
-hypoxia_df$Y[tcga_expr_df$is_normal==FALSE] = 1
+colData(hypoxia_se)$Y <- ifelse(colData(hypoxia_se)$is_normal, 0, 1)
+
 @
 
 \section{Get Reference Gene Weightings }
@@ -94,19 +97,19 @@ hypoxia_df$Y[tcga_expr_df$is_normal==FALSE] = 1
 Now that our data is in the appropriate format, we can learn the weightings.
 <<>>=
 
-res = get_gene_weights(hypoxia_df)
-gene_weights = res[[1]]
-sample_scores = res[[2]]
+res <- get_gene_weights(hypoxia_se)
+gene_weights <- res[[1]]
+sample_scores <- res[[2]]
 @
 
 Now let's see how well we did in seperating the two classes defined by \emph{Y}.
 <<fig=TRUE, width=3, height=3>>=
 
-training_res = get_classification_accuracy(sample_scores, positive_val=1)
+training_res <- get_classification_accuracy(sample_scores, positive_val=1)
 
 # plot the ROC curve
 plot(training_res[[4]], col="blue", ylim=c(0, 1))
-roc_text = paste("AUC:", round(training_res$auc_roc,3))
+roc_text <- paste("AUC:", round(training_res$auc_roc,3))
 
 legend(0.1,0.8, roc_text,
        border="white",cex=1,box.col = "white")
@@ -116,7 +119,7 @@ legend(0.1,0.8, roc_text,
 
 # plot the PR curve
 plot(training_res[[3]], col="orange", ylim=c(0, 1))
-pr_text = paste("AUC:", round(training_res$auc_pr,3))
+pr_text <- paste("AUC:", round(training_res$auc_pr,3))
 legend(0.1,0.8, pr_text,
        border="white",cex=1,box.col = "white")
 @
@@ -126,7 +129,11 @@ Now, using the gene weightings learned from the reference set, we can apply
 it to a new sample.
 <<>>=
 data(new_samp_df)
-new_score_df = get_new_samp_score(gene_weights, new_samp_df)
+new_samp_se <- SummarizedExperiment(t(new_samp_df[ , -(1)]),
+                                    colData=new_samp_df[ , 1, drop=FALSE])
+colnames(colData(new_samp_se)) <- "sample_id"
+
+new_score_df <- get_new_samp_score(gene_weights, new_samp_se)
 new_score_df
 @
 
@@ -141,11 +148,11 @@ produce a HIF-mediated hypoxic response or not, respectively.
 plot_scores <- function(hif_scores){
 
     # format the sample IDS
-    hif_scores$sample_type = substr(hif_scores$sample_id, 1,
+    hif_scores$sample_type <- substr(hif_scores$sample_id, 1,
                                   nchar((hif_scores$sample_id))-2)
-    colnames(hif_scores)[2] = "pathway_score"
+    colnames(hif_scores)[2] <- "pathway_score"
 
-    gg = ggplot(hif_scores, aes(x=sample_type, y=pathway_score,
+    gg <- ggplot(hif_scores, aes(x=sample_type, y=pathway_score,
                                   fill=sample_type)) +
         geom_boxplot() +
         theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
@@ -153,11 +160,11 @@ plot_scores <- function(hif_scores){
 
         return(gg)
 }
-gg = plot_scores(new_score_df)
+gg <- plot_scores(as.data.frame(new_score_df))
 print(gg)
 @
 
-Accordingly, we find the the \textbf{hyp\_ctrl} samples have the highest pathway
+Accordingly, we find the \textbf{hyp\_ctrl} samples have the highest pathway
 score. According to our labeling (tumor/hypoxic is 1 and normal/normoxic is 0),
 this implies that these samples are the most hypoxic. Furthermore, we see that
 the samples that were not able to produce a hypoxic response, even in the

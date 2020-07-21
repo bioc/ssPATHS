@@ -1,25 +1,27 @@
 Package: ssPATHS
 Type: Package
-Title: ssPATHS: Single Sample  PATHway Score
-Version: 0.1.1
+Title: ssPATHS: Single Sample PATHway Score
+Version: 1.3.0
 Author: Natalie R. Davidson
 Maintainer: Natalie R. Davidson <natalie.davidson@inf.ethz.ch>
-Description: This package generates pathway scores from expression data for 
-    single samples after training on a reference cohort. The score is generated 
-    by taking the expression of a set of genes (pathway) from a reference cohort
-    and performing linear discriminant analysis to distinguish samples in the 
+Description: This package generates pathway scores from expression data for
+    single samples after training on a reference cohort. The score is generated
+    by taking the expression of a gene set (pathway) from a reference cohort
+    and performing linear discriminant analysis to distinguish samples in the
     cohort that have the pathway augmented and not. The separating hyperplane is
     then used to score new samples.
-License: MIT
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Imports:
     ROCR,
     dml,
-    MESS,
-    data.table
+    MESS
 Suggests:
     ggplot2,
-    plyr,
     testthat (>= 2.1.0)
+Depends:
+    SummarizedExperiment
 RoxygenNote: 6.1.1
+biocViews: Software, GeneExpression, BiomedicalInformatics, RNASeq, Pathways,
+    Transcriptomics, DimensionReduction, Classification

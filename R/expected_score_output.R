@@ -1,4 +1,4 @@
-#' Gene Expression Values for Pancreatic Cancer Cell Lines exposed to Hypoxia
+#' Gene Expression Values for PDAC Cancer Cell Lines exposed to Hypoxia
 #'
 #' @docType data
 #' @usage data(expected_score_output)

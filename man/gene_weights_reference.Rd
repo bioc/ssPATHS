@@ -3,11 +3,11 @@
 \docType{data}
 \name{gene_weights_reference}
 \alias{gene_weights_reference}
-\title{Gene Expression Values for Pancreatic Cancer Cell Lines exposed to Hypoxia}
+\title{Gene Expression Values for PDAC Cancer Cell Lines exposed to Hypoxia}
 \format{A data frame with columns:
 \describe{
  \item{gene_weight}{Float. Gene weighting learned from reference data.}
- \item{gene_ids}{String. The ensembl id of the gene.}
+ \item{gene_id}{String. The ensembl id of the gene.}
 }}
 \source{
 Derived data
@@ -16,7 +16,7 @@ Derived data
 data(gene_weights_reference)
 }
 \description{
-Gene Expression Values for Pancreatic Cancer Cell Lines exposed to Hypoxia
+Gene Expression Values for PDAC Cancer Cell Lines exposed to Hypoxia
 }
 \examples{
 \dontrun{

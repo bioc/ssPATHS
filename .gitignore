@@ -33,3 +33,7 @@
 *.seed
 *.settings
 *.tm_properties
+.Rproj.user
+*.pdf
+*.tex
+ssPATHS.synctex.gz
