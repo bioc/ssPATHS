@@ -131,7 +131,7 @@ get_new_samp_score <- function(gene_weights, expression_se, gene_ids, run_normal
     has_Y <- "Y" %in% colnames(colData(expression_se))
 
     total_gene_ids <- rownames(expression_se)
-    gene_ids = intersect(total_gene_ids, gene_weights$gene_ids)
+    gene_ids = intersect(total_gene_ids, gene_weights$gene_id)
 
     if(length(gene_ids) != length(gene_weights$gene_id)){
         warning("Genes missing in gene_weights or expression_se")
