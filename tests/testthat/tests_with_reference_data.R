@@ -12,11 +12,15 @@ test_that("Gene weight on reference dataset works", {
     hypoxia_gene_ids <- get_hypoxia_genes()
     hypoxia_gene_ids <- intersect(hypoxia_gene_ids, rownames(tcga_se))
     hypoxia_se <- tcga_se[hypoxia_gene_ids,]
+    
+    # get the gene ids we want to use for normalization
+    normalization_gene_ids = rownames(tcga_se)
+    
 
     colData(hypoxia_se)$Y <- ifelse(colData(hypoxia_se)$is_normal, 0, 1)
 
     # now we can get the gene weightings
-    res <- get_gene_weights(hypoxia_se)
+    res <- get_gene_weights(hypoxia_se, normalization_gene_ids)
     gene_weights_test <- res[[1]]
     sample_scores <- res[[2]]
 
@@ -43,8 +47,11 @@ test_that("test classification on reference dataset works", {
 
     colData(hypoxia_se)$Y <- ifelse(colData(hypoxia_se)$is_normal, 0, 1)
 
+    # get the gene ids we want to use for normalization
+    normalization_gene_ids = rownames(tcga_se)
+    
     # now we can get the gene weightings
-    res <- get_gene_weights(hypoxia_se)
+    res <- get_gene_weights(hypoxia_se, normalization_gene_ids)
     sample_scores <- res[[2]]
 
     training_res <- get_classification_accuracy(sample_scores, positive_val=1)
@@ -69,9 +76,12 @@ test_that("test classification on new dataset works", {
     hypoxia_se <- tcga_se[hypoxia_gene_ids,]
 
     colData(hypoxia_se)$Y <- ifelse(colData(hypoxia_se)$is_normal, 0, 1)
+    
+    # get the gene ids we want to use for normalization
+    normalization_gene_ids = rownames(tcga_se)
 
     # now we can get the gene weightings
-    res <- get_gene_weights(hypoxia_se)
+    res <- get_gene_weights(hypoxia_se, normalization_gene_ids)
     gene_weights <- res[[1]]
     sample_scores <- res[[2]]
 
