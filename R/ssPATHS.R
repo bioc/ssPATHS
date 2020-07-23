@@ -30,7 +30,7 @@ get_hypoxia_genes <- function(){
     return(HIF_GENES)
 }
 
-get_gene_weights <- function(expression_se, gene_ids){
+get_gene_weights <- function(expression_se, gene_ids, unidirectional){
     sample_info_names <- colnames(colData(expression_se))
     if(sum(sample_info_names %in% c("Y", "sample_id")) != 2){
         stop("Need column names Y and sample_id")
@@ -87,6 +87,23 @@ get_gene_weights <- function(expression_se, gene_ids){
 
     proj_vector_df <- data.frame(gene_weight=proj_vector, gene_id=gene_ids_final)
 
+    # now clip the weights if a geneset is assumed to be unidirectional
+    if( unidirectional ){
+        pos_sum = sum(proj_vector_df$gene_weight[proj_vector_df$gene_weight > 0])
+        neg_sum = sum(proj_vector_df$gene_weight[proj_vector_df$gene_weight < 0])
+        ratio_sum = pos_sum/abs(neg_sum)
+
+        num_pos = sum(proj_vector_df$gene_weight > 0)
+
+        if(ratio_sum < 0.75 ){
+            proj_vector_df$gene_weight[proj_vector_df$gene_weight > 0] = 0 # only use neg
+        }else{
+            proj_vector_df$gene_weight[proj_vector_df$gene_weight < 0] = 0 # only use pos
+        }
+    }
+
+
+
     return(list(proj_vector_df, dca_proj, flipped))
 
 }
@@ -141,7 +158,7 @@ get_new_samp_score <- function(gene_weights, expression_se, gene_ids, run_normal
     if(run_normalization){
         dca_data <- as.matrix(t(scale(log10(t(dca_matr+1)))))
     }else{
-        dca_data <- as.matrix(t(scale((t(dca_matr+1)))))
+        dca_data <- as.matrix(dca_matr)
     }
     dca_data[is.nan(dca_data)] <- 0
     row.names(dca_data) <- colData(expression_se)$sample_id
