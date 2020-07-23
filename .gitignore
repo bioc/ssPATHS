@@ -33,3 +33,5 @@
 *.seed
 *.settings
 *.tm_properties
+.Rproj.user
+/.history
