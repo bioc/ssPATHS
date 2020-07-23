@@ -9,7 +9,7 @@ Using the gene weights learned from the reference cohort, we apply the
 weightings to new samples to estimate their pathway activity.
 }
 \usage{
-get_new_samp_score(gene_weights, expression_se, run_normalization = TRUE)
+get_new_samp_score(gene_weights, expression_se, gene_ids, run_normalization = TRUE)
 }
 
 \arguments{
@@ -22,11 +22,20 @@ get_new_samp_score(gene_weights, expression_se, run_normalization = TRUE)
    This is an SummarizedExperiment object of the reference samples. Rows are
    genes and columns are samples. The colData component must contain columns
    \code{Y} and \code{sample_id}. The former indicates whether this is a
-   positive or negative sample and the latter is the unique sample id. All
-   genes in the SummarizedExperiment object are assumed to be genes in the
+   positive or negative sample and the latter is the unique sample id.  
+   Within this method, there is a normalization step where each sample is scaled
+   across all genes in the SummarizedExperiment assay. For this to be stable and
+   consistent, we recommend that the assay contain at least 500 genes that are 
+   consistently expressed across all samples in addition to the genes in the 
    pathway of interest.
 
 }
+  \item{gene_ids}{
+   This is a vector of strings, where each element is a \code{gene_id} in the 
+   pathway of interest. The \code{gene_id}s must be present in
+   \code{rownames(expression_se)}. 
+}
+
   \item{run_normalization}{
    Boolean value. If TRUE, the data will be log-transformed, centered and scaled.
    This is recommended since this is done to the reference set when learning the

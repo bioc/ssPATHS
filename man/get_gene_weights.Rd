@@ -9,18 +9,25 @@
   using a pre-defined set of genes related to a pathway of interest.
 }
 \usage{
-get_gene_weights(expression_se)
+get_gene_weights(expression_se, gene_ids)
 }
 
 \arguments{
   \item{expression_se}{
    This is an SummarizedExperiment object of the reference samples. Rows are
-   genes and columns are samples. The colData component must contain columns
-   \code{Y} and \code{sample_id}. The former indicates whether this is a
-   positive or negative sample and the latter is the unique sample id.
-   All genes in the SummarizedExperiment object are assumed to be genes
-   in the pathway of interest.
+   genes and columns are samples. The colData component must contain a 
+   \code{sample_id} column. Within this method, there is a normalization step 
+   where each sample is scaled across all genes in the SummarizedExperiment 
+   assay. For this to be stable and consistent, we recommend that the assay 
+   contain at least 500 genes that are consistently expressed across all samples
+   in addition to the genes in the pathway of interest.
 }
+  \item{gene_ids}{
+   This is a vector of strings, where each element is a \code{gene_id} in the 
+   pathway of interest. The \code{gene_id}s must be present in
+   \code{rownames(expression_se)}. 
+}
+
 }
 
 \value{
@@ -52,13 +59,12 @@ colData(tcga_se)$sample_id <- tcga_expr_df$tcga_id
 # get related genes, for us hypoxia
 hypoxia_gene_ids <- get_hypoxia_genes()
 hypoxia_gene_ids <- intersect(hypoxia_gene_ids, rownames(tcga_se))
-hypoxia_se <- tcga_se[hypoxia_gene_ids,]
 
 # setup labels for classification
-colData(hypoxia_se)$Y <- ifelse(colData(hypoxia_se)$is_normal, 0, 1)
+colData(tcga_se)$Y <- ifelse(colData(tcga_se)$is_normal, 0, 1)
 
 # now we can get the gene weightings
-res <- get_gene_weights(hypoxia_se)
+res <- get_gene_weights(tcga_se, hypoxia_gene_ids)
 gene_weights_test <- res[[1]]
 sample_scores <- res[[2]]
 
