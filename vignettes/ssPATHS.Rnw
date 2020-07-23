@@ -99,9 +99,11 @@ we scale across all the genes available in the SummarizedExperiment assay. For
 this to be stable and consistent, we recommend that the assay contain at least 
 500 genes that are consistently expressed across all samples in addition to the 
 genes in the pathway of interest.
+We also assume the most of the genes in our hypoxia geneset are increasing, 
+meaning that our genes move unidirectionally.
 <<>>=
 
-res <- get_gene_weights(tcga_se, hypoxia_gene_ids)
+res <- get_gene_weights(tcga_se, hypoxia_gene_ids, unidirectional=TRUE)
 gene_weights <- res[[1]]
 sample_scores <- res[[2]]
 @

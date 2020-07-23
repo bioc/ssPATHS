@@ -9,7 +9,7 @@
   using a pre-defined set of genes related to a pathway of interest.
 }
 \usage{
-get_gene_weights(expression_se, gene_ids)
+get_gene_weights(expression_se, gene_ids, unidirectional)
 }
 
 \arguments{
@@ -26,6 +26,13 @@ get_gene_weights(expression_se, gene_ids)
    This is a vector of strings, where each element is a \code{gene_id} in the 
    pathway of interest. The \code{gene_id}s must be present in
    \code{rownames(expression_se)}. 
+}
+  \item{unidirectional}{
+   This is a boolean, \code{default=TRUE}. Most genesets are unidirectional, 
+   meaning that most genes are either increasing or decreasing together. If this
+   is set to  \code{TRUE}, then the learned weights will be clipped such that 
+   the dominant directionality is kept, and the other gene weights are set to 
+   zero.
 }
 
 }
