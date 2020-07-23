@@ -71,7 +71,7 @@ hypoxia_gene_ids <- intersect(hypoxia_gene_ids, rownames(tcga_se))
 colData(tcga_se)$Y <- ifelse(colData(tcga_se)$is_normal, 0, 1)
 
 # now we can get the gene weightings
-res <- get_gene_weights(tcga_se, hypoxia_gene_ids)
+res <- get_gene_weights(tcga_se, hypoxia_gene_ids, unidirectional=TRUE)
 gene_weights_test <- res[[1]]
 sample_scores <- res[[2]]
 
